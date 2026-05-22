@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Page Cleaner</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      width: 306px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      background: #ffffff;
+      color: #111827;
+      padding: 15px 15px 13px;
+      user-select: none;
+      font-size: 13px;
+    }
+
+    /* ── Header ────────────────────────────────────────────────── */
+    .hdr {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin-bottom: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .badge {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      background: #f3f4f6;
+      border: 1px solid #e5e7eb;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px; flex-shrink: 0;
+    }
+    .hdr-text .title   { font-size: 13px; font-weight: 700; color: #111827; }
+    .hdr-text .sub     { font-size: 10.5px; color: #9ca3af; margin-top: 1px; }
+
+    /* ── Status bar ─────────────────────────────────────────────── */
+    .status {
+      display: flex; align-items: flex-start; gap: 7px;
+      font-size: 11.5px; line-height: 1.4;
+      background: #f9fafb; border: 1px solid #e5e7eb;
+      border-radius: 7px; padding: 7px 9px;
+      margin-bottom: 10px; min-height: 32px;
+      transition: background .2s, border-color .2s, color .2s;
+      color: #6b7280;
+    }
+    .status.success { background:#f0fdf4; border-color:#bbf7d0; color:#166534; }
+    .status.error   { background:#fef2f2; border-color:#fecaca; color:#991b1b; }
+    .status.info    { background:#eff6ff; border-color:#bfdbfe; color:#1e40af; }
+    .status .dot    { width:6px; height:6px; border-radius:50%; background:currentColor; flex-shrink:0; margin-top:4px; opacity:.75; }
+
+    /* ── Buttons ────────────────────────────────────────────────── */
+    .btn {
+      width: 100%; padding: 8px 12px;
+      border-radius: 7px; border: none;
+      cursor: pointer; font-size: 12.5px; font-weight: 600;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      transition: background .13s, box-shadow .13s, transform .1s, opacity .15s;
+      font-family: inherit;
+    }
+    .btn:active:not(:disabled) { transform: scale(0.975); }
+    .btn:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+
+    .btn-clean {
+      background: #111827; color: #fff;
+      box-shadow: 0 1px 3px rgba(0,0,0,.13);
+      margin-bottom: 10px;
+    }
+    .btn-clean:hover:not(:disabled) { background: #1f2937; }
+
+    .btn-pdf {
+      background: #fff; color: #374151;
+      border: 1px solid #d1d5db;
+      box-shadow: 0 1px 2px rgba(0,0,0,.05);
+      margin-top: 8px;
+    }
+    .btn-pdf:hover:not(:disabled) { background: #f9fafb; border-color: #9ca3af; }
+    .btn-pdf:disabled { background: #f9fafb; color: #d1d5db; border-color: #e5e7eb; }
+
+    /* ── PDF Options section ────────────────────────────────────── */
+    .section {
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 9px;
+      padding: 10px 11px 11px;
+    }
+    .section-label {
+      font-size: 10px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .06em;
+      color: #9ca3af; margin-bottom: 9px;
+    }
+
+    /* ── Setting row ────────────────────────────────────────────── */
+    .row {
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 8px;
+    }
+    .row:last-child { margin-bottom: 0; }
+    .row-label {
+      font-size: 11.5px; font-weight: 600; color: #374151;
+      width: 74px; flex-shrink: 0;
+    }
+
+    /* ── Segmented control ──────────────────────────────────────── */
+    .seg-group {
+      display: flex; flex: 1;
+      border: 1px solid #d1d5db; border-radius: 7px;
+      overflow: hidden; background: #f3f4f6;
+    }
+    .seg {
+      flex: 1; padding: 5px 4px;
+      border: none; background: transparent;
+      cursor: pointer; font-size: 11.5px; font-weight: 500;
+      color: #6b7280; font-family: inherit;
+      transition: background .12s, color .12s;
+    }
+    .seg:not(:last-child) { border-right: 1px solid #d1d5db; }
+    .seg.active {
+      background: #fff; color: #111827; font-weight: 700;
+      box-shadow: 0 1px 3px rgba(0,0,0,.09);
+    }
+    .seg:hover:not(.active) { background: #e9eaec; color: #374151; }
+
+    /* ── Margin slider ──────────────────────────────────────────── */
+    .slider-col { flex: 1; display: flex; flex-direction: column; gap: 3px; }
+    .slider-top { display: flex; align-items: center; justify-content: space-between; }
+    .slider-val {
+      font-size: 11px; font-weight: 700; color: #111827;
+      background: #e5e7eb; border-radius: 4px;
+      padding: 1px 6px;
+    }
+    input[type="range"] {
+      width: 100%; accent-color: #111827;
+      height: 4px; cursor: pointer; border-radius: 2px;
+      background: #d1d5db;
+      -webkit-appearance: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px; height: 14px; border-radius: 50%;
+      background: #111827; cursor: pointer;
+      box-shadow: 0 1px 3px rgba(0,0,0,.25);
+    }
+    .slider-ends {
+      display: flex; justify-content: space-between;
+      font-size: 9.5px; color: #9ca3af;
+    }
+
+    /* ── Divider ────────────────────────────────────────────────── */
+    hr { border: none; border-top: 1px solid #f0f0f0; margin: 10px 0 9px; }
+
+    /* ── Target pills ───────────────────────────────────────────── */
+    .pills {
+      display: flex; flex-wrap: wrap; gap: 4px;
+      margin-bottom: 9px;
+    }
+    .pill {
+      font-size: 10px; color: #6b7280;
+      background: #f3f4f6; border: 1px solid #e5e7eb;
+      border-radius: 4px; padding: 2px 6px;
+    }
+
+    /* ── Note ───────────────────────────────────────────────────── */
+    .note {
+      font-size: 10px; color: #9ca3af;
+      text-align: center; line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="hdr">
+    <div class="badge">&#9741;</div>
+    <div class="hdr-text">
+      <div class="title">Page Cleaner</div>
+      <div class="sub">Remove clutter &mdash; read without distraction</div>
+    </div>
+  </div>
+
+  <!-- Status -->
+  <div class="status" id="status">
+    <span class="dot"></span>
+    <span id="status-text">Ready. Open a Scaler article, then click below.</span>
+  </div>
+
+  <!-- Clean button -->
+  <button class="btn btn-clean" id="btn-clean">
+    &#10005;&ensp;Remove Distracting Elements
+  </button>
+
+  <!-- PDF Options -->
+  <div class="section">
+    <div class="section-label">PDF Options</div>
+
+    <!-- Page size -->
+    <div class="row">
+      <span class="row-label">Page Size</span>
+      <div class="seg-group" id="size-group">
+        <button class="seg active" data-val="A4">A4</button>
+        <button class="seg"        data-val="A3">A3</button>
+        <button class="seg"        data-val="B5">B5</button>
+        <button class="seg"        data-val="Letter">Letter</button>
+      </div>
+    </div>
+
+    <!-- Orientation -->
+    <div class="row">
+      <span class="row-label">Orientation</span>
+      <div class="seg-group" id="orient-group">
+        <button class="seg active" data-val="portrait">&#9099; Portrait</button>
+        <button class="seg"        data-val="landscape">&#9100; Landscape</button>
+      </div>
+    </div>
+
+    <!-- Margins -->
+    <div class="row" style="align-items:flex-start;">
+      <span class="row-label" style="margin-top:6px;">Margins</span>
+      <div class="slider-col">
+        <div class="slider-top">
+          <span style="font-size:11px;color:#6b7280;">Space around content</span>
+          <span class="slider-val" id="margin-label">Compact</span>
+        </div>
+        <input type="range" id="margin-slider" min="0" max="4" step="1" value="1" />
+        <div class="slider-ends">
+          <span>None</span>
+          <span>Wide</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Export button -->
+  <button class="btn btn-pdf" id="btn-pdf" disabled>
+    &#128438;&ensp;Export Clean Page as PDF
+  </button>
+
+  <hr />
+
+  <!-- Target pills -->
+  <div class="pills">
+    <span class="pill">Header</span>
+    <span class="pill">Sidebar</span>
+    <span class="pill">Author strip</span>
+    <span class="pill">Article meta</span>
+    <span class="pill">Video banner</span>
+    <span class="pill">Quiz</span>
+    <span class="pill">Challenge</span>
+    <span class="pill">Placement card</span>
+    <span class="pill">Engagement bar</span>
+    <span class="pill">Nav arrows</span>
+    <span class="pill">Content footer</span>
+    <span class="pill">Explore list</span>
+    <span class="pill">Callback strip</span>
+    <span class="pill">Site footer</span>
+  </div>
+
+  <p class="note">
+    PDF opens in a new tab &mdash; links clickable, text selectable, images sharp.
+  </p>
+
+  <script src="popup.js"></script>
+</body>
+</html>
