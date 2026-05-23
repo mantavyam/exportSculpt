@@ -4,7 +4,7 @@ const content = document.getElementById("content");
 const SCALER_PRESETS = [
   "Header","Sidebar","Author widget","Author byline","Article meta","Quiz",
   "Placement card","Challenge","Content footer","Explore list","Nav arrows",
-  "Engagement bar","Video banner","Row spacer","Callback strip","Site footer"
+  "Engagement bar","Video banner","Row spacer","Callback strip","Exit popup","Site footer"
 ];
 
 // ── Storage helpers ─────────────────────────────────────────────────────────
@@ -205,11 +205,13 @@ async function renderBatches() {
             </div>
             <div class="flex-c">
               ${b.status!=="processing"?`<button class="btn btn-pri btn-sm" data-start="${b.id}" ${total===0?"disabled":""}>Start</button>`:""}
-              ${counts.failed?`<button class="btn btn-sec btn-sm" data-retry="${b.id}">Retry Failed</button>`:""}
+              ${counts.done>0?`<button class="btn btn-sec btn-sm" style="color:var(--ok);border-color:var(--ok)" data-dlzip="${b.id}">&#8681; Download Zip</button>`:""}
+              ${counts.failed?`<button class="btn btn-sec btn-sm" style="color:var(--warn);border-color:var(--warn)" data-retry="${b.id}">Retry ${counts.failed} Failed</button>`:""}
               <button class="btn btn-err btn-sm" data-del="${b.id}">&times;</button>
             </div>
           </div>
           ${b.status==="processing"?`<div style="background:var(--border);border-radius:4px;height:6px;margin-bottom:10px;overflow:hidden"><div style="background:var(--pri);height:100%;width:${pct}%;transition:width .3s;border-radius:4px"></div></div>`:""}
+          ${b.status==="partial"?`<div style="background:var(--warn-l);border:1px solid var(--warn);border-radius:var(--rs);padding:8px 10px;margin-bottom:10px;font-size:12px;color:#92400e;display:flex;align-items:center;gap:8px"><span style="font-size:16px">&#9888;</span><span>${counts.failed} item${counts.failed===1?"":"s"} failed. You can <strong>download the ${counts.done} completed PDF${counts.done===1?"":"s"}</strong> or retry the failed items.</span></div>`:""}
           <div style="margin-bottom:8px;display:flex;gap:6px">
             <input class="input" style="flex:1;width:auto" id="add-url-${b.id}" placeholder="Paste URL or use current tab"/>
             <button class="btn btn-sec btn-sm" data-addurl="${b.id}">Add URL</button>
@@ -270,11 +272,19 @@ async function renderBatches() {
     }));
     content.querySelectorAll("[data-addtab]").forEach(b => b.addEventListener("click", async () => {
       const bid = b.dataset.addtab;
-      const [tab] = await chrome.tabs.query({ active:true, currentWindow:true });
-      if (!tab) return;
+      // Get the most recent non-extension tab in the current window
+      const allTabs = await chrome.tabs.query({ currentWindow: true });
+      const extUrl = chrome.runtime.getURL("");
+      const userTab = allTabs.find(t => !t.url.startsWith(extUrl) && !t.url.startsWith("chrome-extension://")
+        && !t.url.startsWith("chrome://") && !t.url.startsWith("edge://"))
+        || allTabs.filter(t => t.url.startsWith("http")).pop();
+      if (!userTab) return;
       const bs = await loadBatches(); if (!bs[bid]) return;
-      bs[bid].items.push({ id:"i_"+Date.now(), url:tab.url, title:tab.title||tab.url, status:"queued", overrides:null, error:null });
+      bs[bid].items.push({ id:"i_"+Date.now(), url:userTab.url, title:userTab.title||userTab.url, status:"queued", overrides:null, error:null });
       await saveBatches(bs); renderBatchCards();
+    }));
+    content.querySelectorAll("[data-dlzip]").forEach(b => b.addEventListener("click", () => {
+      chrome.runtime.sendMessage({ type: "downloadZip", batchId: b.dataset.dlzip });
     }));
     content.querySelectorAll("[data-rmitem]").forEach(b => b.addEventListener("click", async () => {
       const [bid, idx] = b.dataset.rmitem.split(":");

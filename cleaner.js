@@ -31,6 +31,7 @@
     "Video banner":    "div:has(> .articleWidget_banner_heading___leIS)",
     "Row spacer":      "div.row.space-between.m-b-xxs",
     "Callback strip":  "div.rcb_widget",
+    "Exit popup":      "div.exit-intent_modal_container__O2C8_",
     "Site footer":     "footer"
   };
 
