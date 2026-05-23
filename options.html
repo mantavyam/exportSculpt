@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>exportSculpt Settings</title>
+<style>
+:root{
+  --bg:#f1f5f9;--surface:#fff;--border:#e2e8f0;
+  --text:#1e293b;--text2:#64748b;--text3:#94a3b8;
+  --pri:#3b82f6;--pri-h:#2563eb;--pri-l:#eff6ff;--pri-d:#1e40af;
+  --ok:#10b981;--ok-l:#ecfdf5;--err:#ef4444;--err-l:#fef2f2;
+  --warn:#f59e0b;--warn-l:#fffbeb;
+  --r:12px;--rs:8px;--sh:0 1px 3px rgba(0,0,0,.06);--sh-m:0 4px 12px rgba(0,0,0,.08);
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+}
+[data-theme="dark"]{
+  --bg:#0f172a;--surface:#1e293b;--border:#334155;
+  --text:#f1f5f9;--text2:#94a3b8;--text3:#64748b;
+  --pri:#60a5fa;--pri-h:#93c5fd;--pri-l:#1e3a5f;--pri-d:#bfdbfe;
+  --ok:#34d399;--ok-l:#064e3b;--err:#f87171;--err-l:#7f1d1d;
+  --warn:#fbbf24;--warn-l:#451a03;
+  --sh:0 1px 4px rgba(0,0,0,.3);--sh-m:0 4px 12px rgba(0,0,0,.4);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex;min-height:100vh}
+
+/* ── Sidebar ──────────────────────────────────────────────────────── */
+.sidebar{width:220px;background:var(--surface);border-right:1px solid var(--border);
+  padding:20px 0;display:flex;flex-direction:column;position:fixed;top:0;bottom:0;z-index:10}
+.sidebar .logo{display:flex;align-items:center;gap:10px;padding:0 20px 20px;border-bottom:1px solid var(--border);margin-bottom:12px}
+.sidebar .logo .badge{width:32px;height:32px;border-radius:var(--rs);background:var(--pri);
+  display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;font-weight:700}
+.sidebar .logo .brand{font-size:15px;font-weight:700;color:var(--text)}
+.sidebar .logo .ver{font-size:10px;color:var(--text3);margin-top:1px}
+
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 20px;cursor:pointer;
+  color:var(--text2);font-size:13px;font-weight:500;transition:all .12s;border-left:3px solid transparent;text-decoration:none}
+.nav-item:hover{background:var(--bg);color:var(--text)}
+.nav-item.active{background:var(--pri-l);color:var(--pri-d);border-left-color:var(--pri);font-weight:700}
+.nav-item .ico{font-size:16px;width:20px;text-align:center}
+
+/* ── Main content ─────────────────────────────────────────────────── */
+.main{margin-left:220px;flex:1;padding:28px 36px;max-width:900px}
+.page-hdr{margin-bottom:24px}
+.page-hdr h1{font-size:22px;font-weight:700;color:var(--text);margin-bottom:4px}
+.page-hdr p{font-size:13px;color:var(--text2)}
+
+/* ── Card ─────────────────────────────────────────────────────────── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
+  padding:18px 20px;margin-bottom:16px;box-shadow:var(--sh)}
+.card-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;
+  color:var(--text3);margin-bottom:14px}
+
+/* ── Setting row ──────────────────────────────────────────────────── */
+.srow{display:flex;align-items:center;justify-content:space-between;padding:10px 0;
+  border-bottom:1px solid var(--border)}
+.srow:last-child{border-bottom:none}
+.srow-info{flex:1;margin-right:16px}
+.srow-name{font-size:13px;font-weight:600;color:var(--text)}
+.srow-desc{font-size:11.5px;color:var(--text3);margin-top:2px}
+
+/* Toggle */
+.toggle{position:relative;display:inline-block;width:40px;height:22px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0}
+.toggle .sl{position:absolute;cursor:pointer;inset:0;background:var(--border);border-radius:22px;transition:.2s}
+.toggle .sl::before{content:"";position:absolute;width:18px;height:18px;left:2px;bottom:2px;
+  background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 2px rgba(0,0,0,.15)}
+.toggle input:checked+.sl{background:var(--pri)}
+.toggle input:checked+.sl::before{transform:translateX(18px)}
+
+/* Segmented */
+.seg-group{display:inline-flex;border:1px solid var(--border);border-radius:var(--rs);overflow:hidden;background:var(--bg)}
+.seg{padding:6px 14px;border:none;background:transparent;cursor:pointer;font-size:12px;
+  font-weight:500;color:var(--text2);font-family:var(--font);transition:all .12s}
+.seg:not(:last-child){border-right:1px solid var(--border)}
+.seg.on{background:var(--surface);color:var(--text);font-weight:700;box-shadow:0 1px 2px rgba(0,0,0,.06)}
+
+/* Input */
+.input{padding:7px 12px;border:1px solid var(--border);border-radius:var(--rs);font-size:13px;
+  font-family:var(--font);color:var(--text);background:var(--bg);width:280px;outline:none;transition:border .15s}
+.input:focus{border-color:var(--pri);box-shadow:0 0 0 3px rgba(59,130,246,.12)}
+.input-sm{width:180px}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--rs);
+  border:none;cursor:pointer;font-size:12.5px;font-weight:600;font-family:var(--font);transition:all .13s}
+.btn:active{transform:scale(.97)}
+.btn-pri{background:var(--pri);color:#fff;box-shadow:var(--sh)}
+.btn-pri:hover{background:var(--pri-h)}
+.btn-sec{background:var(--surface);color:var(--text);border:1px solid var(--border)}
+.btn-sec:hover{background:var(--bg)}
+.btn-err{background:var(--err);color:#fff}
+.btn-err:hover{background:#dc2626}
+.btn-sm{padding:5px 10px;font-size:11.5px}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* Table */
+.tbl{width:100%;border-collapse:collapse;font-size:12.5px}
+.tbl th{text-align:left;padding:8px 10px;font-weight:700;color:var(--text3);border-bottom:2px solid var(--border);font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+.tbl td{padding:8px 10px;border-bottom:1px solid var(--border);color:var(--text2)}
+.tbl tr:hover td{background:var(--bg)}
+.tbl a{color:var(--pri);text-decoration:none}
+
+/* Status badges */
+.badge-s{display:inline-block;padding:2px 8px;border-radius:12px;font-size:10.5px;font-weight:600}
+.badge-queued{background:var(--bg);color:var(--text3)}
+.badge-processing{background:var(--pri-l);color:var(--pri)}
+.badge-done{background:var(--ok-l);color:var(--ok)}
+.badge-failed{background:var(--err-l);color:var(--err)}
+
+/* Search bar */
+.search{display:flex;gap:8px;margin-bottom:16px}
+.search .input{flex:1}
+
+/* Batch item row */
+.batch-item{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--bg);
+  border:1px solid var(--border);border-radius:var(--rs);margin-bottom:6px;font-size:12.5px}
+.batch-item .url{flex:1;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.batch-item .actions{display:flex;gap:4px}
+
+/* Selector item */
+.sel-item{display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--bg);
+  border:1px solid var(--border);border-radius:6px;margin-bottom:4px;font-family:monospace;font-size:12px;color:var(--text2)}
+.sel-item .x{cursor:pointer;color:var(--err);font-weight:700;margin-left:auto;padding:0 4px}
+
+/* Preset grid */
+.preset-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.preset-item{display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--bg);
+  border:1px solid var(--border);border-radius:6px;font-size:12px;cursor:pointer}
+.preset-item input{accent-color:var(--pri);cursor:pointer}
+
+/* Empty state */
+.empty{text-align:center;padding:40px 20px;color:var(--text3);font-size:13px}
+.empty .ico{font-size:32px;margin-bottom:8px;opacity:.5}
+
+/* Spacing helpers */
+.mb-s{margin-bottom:8px}.mb-m{margin-bottom:16px}.mt-m{margin-top:16px}
+.flex-c{display:flex;align-items:center;gap:8px}
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="logo">
+    <div class="badge">eS</div>
+    <div><div class="brand">exportSculpt</div><div class="ver">v2.0.0</div></div>
+  </div>
+  <a class="nav-item active" href="#/settings" data-page="settings"><span class="ico">&#9881;</span>Settings</a>
+  <a class="nav-item" href="#/batches" data-page="batches"><span class="ico">&#9776;</span>Batch Process</a>
+  <a class="nav-item" href="#/history" data-page="history"><span class="ico">&#128338;</span>History</a>
+  <a class="nav-item" href="#/selectors" data-page="selectors"><span class="ico">&#10010;</span>Custom Selectors</a>
+</aside>
+<main class="main" id="content"></main>
+<script src="options.js"></script>
+</body>
+</html>

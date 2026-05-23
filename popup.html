@@ -1,267 +1,202 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Page Cleaner</title>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width"/>
+<title>exportSculpt</title>
+<style>
+:root {
+  --bg:#ffffff; --surface:#f8fafc; --border:#e2e8f0;
+  --text:#1e293b; --text2:#64748b; --text3:#94a3b8;
+  --pri:#3b82f6; --pri-h:#2563eb; --pri-l:#eff6ff;
+  --ok:#10b981; --ok-l:#ecfdf5; --err:#ef4444; --err-l:#fef2f2;
+  --info:#3b82f6; --info-l:#eff6ff;
+  --r:12px; --rs:8px; --sh:0 1px 3px rgba(0,0,0,.06);
+}
+[data-theme="dark"] {
+  --bg:#0f172a; --surface:#1e293b; --border:#334155;
+  --text:#f1f5f9; --text2:#94a3b8; --text3:#64748b;
+  --pri:#60a5fa; --pri-h:#93c5fd; --pri-l:#1e3a5f;
+  --ok:#34d399; --ok-l:#064e3b; --err:#f87171; --err-l:#7f1d1d;
+  --info:#60a5fa; --info-l:#1e3a5f;
+  --sh:0 1px 4px rgba(0,0,0,.3);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{width:330px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+  background:var(--bg);color:var(--text);padding:16px;user-select:none;font-size:13px}
 
-    body {
-      width: 306px;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-      background: #ffffff;
-      color: #111827;
-      padding: 15px 15px 13px;
-      user-select: none;
-      font-size: 13px;
-    }
+/* Header */
+.hdr{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.hdr img{width:28px;height:28px;border-radius:var(--rs);object-fit:cover}
+.hdr-badge{width:28px;height:28px;border-radius:var(--rs);background:var(--pri);
+  display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;font-weight:700;flex-shrink:0}
+.hdr .name{font-size:14px;font-weight:700;color:var(--text);letter-spacing:-.02em}
+.hdr .tag{font-size:10px;color:var(--text3);margin-top:1px}
 
-    /* ── Header ────────────────────────────────────────────────── */
-    .hdr {
-      display: flex;
-      align-items: center;
-      gap: 9px;
-      margin-bottom: 12px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid #f0f0f0;
-    }
-    .badge {
-      width: 32px; height: 32px;
-      border-radius: 8px;
-      background: #f3f4f6;
-      border: 1px solid #e5e7eb;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 15px; flex-shrink: 0;
-    }
-    .hdr-text .title   { font-size: 13px; font-weight: 700; color: #111827; }
-    .hdr-text .sub     { font-size: 10.5px; color: #9ca3af; margin-top: 1px; }
+/* Mode chip */
+.mode{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:600;
+  padding:3px 10px;border-radius:20px;margin-bottom:12px}
+.mode.scaler{background:#ecfdf5;color:#059669;border:1px solid #a7f3d0}
+.mode.general{background:var(--pri-l);color:var(--pri);border:1px solid #bfdbfe}
 
-    /* ── Status bar ─────────────────────────────────────────────── */
-    .status {
-      display: flex; align-items: flex-start; gap: 7px;
-      font-size: 11.5px; line-height: 1.4;
-      background: #f9fafb; border: 1px solid #e5e7eb;
-      border-radius: 7px; padding: 7px 9px;
-      margin-bottom: 10px; min-height: 32px;
-      transition: background .2s, border-color .2s, color .2s;
-      color: #6b7280;
-    }
-    .status.success { background:#f0fdf4; border-color:#bbf7d0; color:#166534; }
-    .status.error   { background:#fef2f2; border-color:#fecaca; color:#991b1b; }
-    .status.info    { background:#eff6ff; border-color:#bfdbfe; color:#1e40af; }
-    .status .dot    { width:6px; height:6px; border-radius:50%; background:currentColor; flex-shrink:0; margin-top:4px; opacity:.75; }
+/* Status */
+.status{font-size:11.5px;line-height:1.4;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--rs);padding:8px 10px;margin-bottom:11px;display:flex;align-items:flex-start;gap:7px;color:var(--text2);min-height:34px}
+.status .dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0;margin-top:5px;opacity:.7}
+.status.ok{background:var(--ok-l);border-color:#a7f3d0;color:#166534}
+.status.err{background:var(--err-l);border-color:#fecaca;color:#991b1b}
+.status.info{background:var(--info-l);border-color:#bfdbfe;color:#1e40af}
 
-    /* ── Buttons ────────────────────────────────────────────────── */
-    .btn {
-      width: 100%; padding: 8px 12px;
-      border-radius: 7px; border: none;
-      cursor: pointer; font-size: 12.5px; font-weight: 600;
-      display: flex; align-items: center; justify-content: center; gap: 6px;
-      transition: background .13s, box-shadow .13s, transform .1s, opacity .15s;
-      font-family: inherit;
-    }
-    .btn:active:not(:disabled) { transform: scale(0.975); }
-    .btn:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+/* Cards */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:11px 12px;margin-bottom:10px}
+.card-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:8px}
 
-    .btn-clean {
-      background: #111827; color: #fff;
-      box-shadow: 0 1px 3px rgba(0,0,0,.13);
-      margin-bottom: 10px;
-    }
-    .btn-clean:hover:not(:disabled) { background: #1f2937; }
+/* Buttons */
+.btn{width:100%;padding:9px 13px;border-radius:var(--rs);border:none;cursor:pointer;
+  font-size:12.5px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px;
+  transition:all .13s;font-family:inherit}
+.btn:active:not(:disabled){transform:scale(.975)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn-pri{background:var(--pri);color:#fff;box-shadow:var(--sh)}
+.btn-pri:hover:not(:disabled){background:var(--pri-h)}
+.btn-sec{background:var(--bg);color:var(--text);border:1px solid var(--border);box-shadow:var(--sh)}
+.btn-sec:hover:not(:disabled){background:var(--surface);border-color:var(--text3)}
+.btn-sec:disabled{background:var(--surface);color:var(--text3);border-color:var(--border)}
 
-    .btn-pdf {
-      background: #fff; color: #374151;
-      border: 1px solid #d1d5db;
-      box-shadow: 0 1px 2px rgba(0,0,0,.05);
-      margin-top: 8px;
-    }
-    .btn-pdf:hover:not(:disabled) { background: #f9fafb; border-color: #9ca3af; }
-    .btn-pdf:disabled { background: #f9fafb; color: #d1d5db; border-color: #e5e7eb; }
+/* Checkbox rows (non-Scaler) */
+.chk-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:12px;color:var(--text2)}
+.chk-row input[type="checkbox"]{accent-color:var(--pri);width:15px;height:15px;cursor:pointer}
+.chk-row:last-child{margin-bottom:0}
 
-    /* ── PDF Options section ────────────────────────────────────── */
-    .section {
-      background: #f9fafb;
-      border: 1px solid #e5e7eb;
-      border-radius: 9px;
-      padding: 10px 11px 11px;
-    }
-    .section-label {
-      font-size: 10px; font-weight: 700;
-      text-transform: uppercase; letter-spacing: .06em;
-      color: #9ca3af; margin-bottom: 9px;
-    }
+/* Segmented control */
+.seg-group{display:flex;border:1px solid var(--border);border-radius:var(--rs);overflow:hidden;background:var(--surface)}
+.seg{flex:1;padding:5px 4px;border:none;background:transparent;cursor:pointer;font-size:11px;
+  font-weight:500;color:var(--text2);font-family:inherit;transition:all .12s}
+.seg:not(:last-child){border-right:1px solid var(--border)}
+.seg.on{background:var(--bg);color:var(--text);font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.07)}
+.seg:hover:not(.on){background:var(--border);color:var(--text)}
 
-    /* ── Setting row ────────────────────────────────────────────── */
-    .row {
-      display: flex; align-items: center; gap: 8px;
-      margin-bottom: 8px;
-    }
-    .row:last-child { margin-bottom: 0; }
-    .row-label {
-      font-size: 11.5px; font-weight: 600; color: #374151;
-      width: 74px; flex-shrink: 0;
-    }
+/* Setting row */
+.srow{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.srow:last-child{margin-bottom:0}
+.srow-label{font-size:11.5px;font-weight:600;color:var(--text2);width:74px;flex-shrink:0}
 
-    /* ── Segmented control ──────────────────────────────────────── */
-    .seg-group {
-      display: flex; flex: 1;
-      border: 1px solid #d1d5db; border-radius: 7px;
-      overflow: hidden; background: #f3f4f6;
-    }
-    .seg {
-      flex: 1; padding: 5px 4px;
-      border: none; background: transparent;
-      cursor: pointer; font-size: 11.5px; font-weight: 500;
-      color: #6b7280; font-family: inherit;
-      transition: background .12s, color .12s;
-    }
-    .seg:not(:last-child) { border-right: 1px solid #d1d5db; }
-    .seg.active {
-      background: #fff; color: #111827; font-weight: 700;
-      box-shadow: 0 1px 3px rgba(0,0,0,.09);
-    }
-    .seg:hover:not(.active) { background: #e9eaec; color: #374151; }
+/* Slider */
+.slider-w{flex:1;display:flex;flex-direction:column;gap:2px}
+.slider-top{display:flex;align-items:center;justify-content:space-between}
+.slider-val{font-size:10.5px;font-weight:700;color:var(--text);background:var(--border);border-radius:4px;padding:1px 6px}
+input[type="range"]{width:100%;accent-color:var(--pri);height:4px;cursor:pointer;border-radius:2px;background:var(--border);-webkit-appearance:none}
+input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--pri);cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.slider-ends{display:flex;justify-content:space-between;font-size:9px;color:var(--text3)}
 
-    /* ── Margin slider ──────────────────────────────────────────── */
-    .slider-col { flex: 1; display: flex; flex-direction: column; gap: 3px; }
-    .slider-top { display: flex; align-items: center; justify-content: space-between; }
-    .slider-val {
-      font-size: 11px; font-weight: 700; color: #111827;
-      background: #e5e7eb; border-radius: 4px;
-      padding: 1px 6px;
-    }
-    input[type="range"] {
-      width: 100%; accent-color: #111827;
-      height: 4px; cursor: pointer; border-radius: 2px;
-      background: #d1d5db;
-      -webkit-appearance: none;
-    }
-    input[type="range"]::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 14px; height: 14px; border-radius: 50%;
-      background: #111827; cursor: pointer;
-      box-shadow: 0 1px 3px rgba(0,0,0,.25);
-    }
-    .slider-ends {
-      display: flex; justify-content: space-between;
-      font-size: 9.5px; color: #9ca3af;
-    }
+/* Export format buttons */
+.export-row{display:flex;gap:6px;margin-top:8px}
+.exp-btn{flex:1;padding:7px 4px;border-radius:var(--rs);border:1px solid var(--border);
+  background:var(--bg);color:var(--text2);cursor:pointer;font-size:10.5px;font-weight:600;
+  text-align:center;transition:all .13s;font-family:inherit}
+.exp-btn:hover:not(:disabled){border-color:var(--pri);color:var(--pri);background:var(--pri-l)}
+.exp-btn:disabled{opacity:.35;cursor:not-allowed}
+.exp-btn .ico{display:block;font-size:16px;margin-bottom:2px}
 
-    /* ── Divider ────────────────────────────────────────────────── */
-    hr { border: none; border-top: 1px solid #f0f0f0; margin: 10px 0 9px; }
+/* Footer links */
+.footer{display:flex;justify-content:center;gap:14px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.footer a{font-size:11px;color:var(--text3);text-decoration:none;font-weight:500;transition:color .13s}
+.footer a:hover{color:var(--pri)}
 
-    /* ── Target pills ───────────────────────────────────────────── */
-    .pills {
-      display: flex; flex-wrap: wrap; gap: 4px;
-      margin-bottom: 9px;
-    }
-    .pill {
-      font-size: 10px; color: #6b7280;
-      background: #f3f4f6; border: 1px solid #e5e7eb;
-      border-radius: 4px; padding: 2px 6px;
-    }
-
-    /* ── Note ───────────────────────────────────────────────────── */
-    .note {
-      font-size: 10px; color: #9ca3af;
-      text-align: center; line-height: 1.5;
-    }
-  </style>
+/* Toggle switch */
+.toggle{position:relative;display:inline-block;width:36px;height:20px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0}
+.toggle .sl{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--border);
+  border-radius:20px;transition:.2s}
+.toggle .sl::before{content:"";position:absolute;width:16px;height:16px;left:2px;bottom:2px;
+  background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 2px rgba(0,0,0,.15)}
+.toggle input:checked+.sl{background:var(--pri)}
+.toggle input:checked+.sl::before{transform:translateX(16px)}
+</style>
 </head>
 <body>
+<!-- Header -->
+<div class="hdr">
+  <div class="hdr-badge">eS</div>
+  <div>
+    <div class="name">exportSculpt</div>
+    <div class="tag">Sculpt &middot; Clean &middot; Export</div>
+  </div>
+</div>
 
-  <!-- Header -->
-  <div class="hdr">
-    <div class="badge">&#9741;</div>
-    <div class="hdr-text">
-      <div class="title">Page Cleaner</div>
-      <div class="sub">Remove clutter &mdash; read without distraction</div>
+<!-- Mode indicator -->
+<div class="mode general" id="mode-chip">
+  <span id="mode-icon">&#9675;</span>
+  <span id="mode-text">General Mode</span>
+</div>
+
+<!-- Status -->
+<div class="status" id="status">
+  <span class="dot"></span>
+  <span id="status-text">Ready. Open any page and clean or export.</span>
+</div>
+
+<!-- Non-Scaler options (hidden on Scaler) -->
+<div class="card" id="general-opts" style="display:none">
+  <div class="card-title">Optional Cleanup</div>
+  <label class="chk-row"><input type="checkbox" id="chk-header"/> Remove &lt;header&gt; element</label>
+  <label class="chk-row"><input type="checkbox" id="chk-footer"/> Remove &lt;footer&gt; element</label>
+</div>
+
+<!-- Clean button -->
+<button class="btn btn-pri" id="btn-clean" style="margin-bottom:10px">
+  &#10005;&ensp;Remove Distracting Elements
+</button>
+
+<!-- PDF Options -->
+<div class="card">
+  <div class="card-title">PDF Options</div>
+  <div class="srow">
+    <span class="srow-label">Page Size</span>
+    <div class="seg-group" id="sg-size">
+      <button class="seg on" data-v="A4">A4</button>
+      <button class="seg" data-v="A3">A3</button>
+      <button class="seg" data-v="B5">B5</button>
+      <button class="seg" data-v="Letter">Letter</button>
     </div>
   </div>
-
-  <!-- Status -->
-  <div class="status" id="status">
-    <span class="dot"></span>
-    <span id="status-text">Ready. Open a Scaler article, then click below.</span>
+  <div class="srow">
+    <span class="srow-label">Orientation</span>
+    <div class="seg-group" id="sg-orient">
+      <button class="seg on" data-v="portrait">Portrait</button>
+      <button class="seg" data-v="landscape">Landscape</button>
+    </div>
   </div>
-
-  <!-- Clean button -->
-  <button class="btn btn-clean" id="btn-clean">
-    &#10005;&ensp;Remove Distracting Elements
-  </button>
-
-  <!-- PDF Options -->
-  <div class="section">
-    <div class="section-label">PDF Options</div>
-
-    <!-- Page size -->
-    <div class="row">
-      <span class="row-label">Page Size</span>
-      <div class="seg-group" id="size-group">
-        <button class="seg active" data-val="A4">A4</button>
-        <button class="seg"        data-val="A3">A3</button>
-        <button class="seg"        data-val="B5">B5</button>
-        <button class="seg"        data-val="Letter">Letter</button>
+  <div class="srow" style="align-items:flex-start">
+    <span class="srow-label" style="margin-top:6px">Margins</span>
+    <div class="slider-w">
+      <div class="slider-top">
+        <span style="font-size:11px;color:var(--text3)">Space around content</span>
+        <span class="slider-val" id="m-label">Compact</span>
       </div>
-    </div>
-
-    <!-- Orientation -->
-    <div class="row">
-      <span class="row-label">Orientation</span>
-      <div class="seg-group" id="orient-group">
-        <button class="seg active" data-val="portrait">&#9099; Portrait</button>
-        <button class="seg"        data-val="landscape">&#9100; Landscape</button>
-      </div>
-    </div>
-
-    <!-- Margins -->
-    <div class="row" style="align-items:flex-start;">
-      <span class="row-label" style="margin-top:6px;">Margins</span>
-      <div class="slider-col">
-        <div class="slider-top">
-          <span style="font-size:11px;color:#6b7280;">Space around content</span>
-          <span class="slider-val" id="margin-label">Compact</span>
-        </div>
-        <input type="range" id="margin-slider" min="0" max="4" step="1" value="1" />
-        <div class="slider-ends">
-          <span>None</span>
-          <span>Wide</span>
-        </div>
-      </div>
+      <input type="range" id="m-slider" min="0" max="4" step="1" value="1"/>
+      <div class="slider-ends"><span>None</span><span>Wide</span></div>
     </div>
   </div>
+</div>
 
-  <!-- Export button -->
-  <button class="btn btn-pdf" id="btn-pdf" disabled>
-    &#128438;&ensp;Export Clean Page as PDF
-  </button>
+<!-- Export actions -->
+<button class="btn btn-sec" id="btn-pdf" disabled style="margin-bottom:6px">
+  &#128438;&ensp;Export as PDF
+</button>
+<div class="export-row">
+  <button class="exp-btn" id="btn-md" disabled><span class="ico">&#128196;</span>Markdown</button>
+  <button class="exp-btn" id="btn-html" disabled><span class="ico">&#128441;</span>HTML</button>
+  <button class="exp-btn" id="btn-clip" disabled><span class="ico">&#128203;</span>Copy Text</button>
+</div>
 
-  <hr />
+<!-- Footer links -->
+<div class="footer">
+  <a href="#" id="link-settings">Settings</a>
+  <a href="#" id="link-batches">Batch Process</a>
+  <a href="#" id="link-history">History</a>
+</div>
 
-  <!-- Target pills -->
-  <div class="pills">
-    <span class="pill">Header</span>
-    <span class="pill">Sidebar</span>
-    <span class="pill">Author strip</span>
-    <span class="pill">Article meta</span>
-    <span class="pill">Video banner</span>
-    <span class="pill">Quiz</span>
-    <span class="pill">Challenge</span>
-    <span class="pill">Placement card</span>
-    <span class="pill">Engagement bar</span>
-    <span class="pill">Nav arrows</span>
-    <span class="pill">Content footer</span>
-    <span class="pill">Explore list</span>
-    <span class="pill">Callback strip</span>
-    <span class="pill">Site footer</span>
-  </div>
-
-  <p class="note">
-    PDF opens in a new tab &mdash; links clickable, text selectable, images sharp.
-  </p>
-
-  <script src="popup.js"></script>
+<script src="popup.js"></script>
 </body>
 </html>

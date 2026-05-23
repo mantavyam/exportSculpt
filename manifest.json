@@ -1,9 +1,18 @@
 {
   "manifest_version": 3,
-  "name": "Page Cleaner",
-  "version": "1.0",
-  "description": "Removes distracting UI elements from article pages so you can read without clutter.",
-  "permissions": ["activeTab", "scripting"],
+  "name": "exportSculpt",
+  "version": "2.0.0",
+  "description": "Sculpt, clean, and export any webpage as a flawless PDF.",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "debugger",
+    "tabs",
+    "storage",
+    "contextMenus",
+    "downloads"
+  ],
+  "host_permissions": ["<all_urls>"],
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
@@ -11,5 +20,24 @@
       "48": "icons/icon48.png",
       "128": "icons/icon128.png"
     }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "commands": {
+    "clean-page": {
+      "suggested_key": { "default": "Alt+C" },
+      "description": "Clean current page"
+    },
+    "export-pdf": {
+      "suggested_key": { "default": "Alt+P" },
+      "description": "Export current page as PDF"
+    }
+  },
+  "options_page": "options.html",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
   }
 }

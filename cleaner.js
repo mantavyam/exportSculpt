@@ -1,97 +1,78 @@
 /**
- * cleaner.js — injected into the active tab.
+ * cleaner.js — exportSculpt DOM cleaner
+ * Injected via popup, context menu, keyboard shortcut, or auto-clean.
  *
- * Each selector targets the *outermost* wrapper of a distracting block so the
- * entire subtree is deleted in one shot.  :has() is used for wrappers whose
- * own element has no distinguishing class but whose first meaningful child does.
- *
- * All matches are removed via el.remove() — not hidden, not collapsed, gone.
+ * Reads window.__ES_CLEAN_OPTS (set by caller) for:
+ *   - scalerPresets: object of preset name → boolean (which Scaler selectors to run)
+ *   - removeHeader: boolean (non-Scaler: delete <header>)
+ *   - removeFooter: boolean (non-Scaler: delete <footer>)
+ *   - customSelectors: string[] (per-site custom selectors)
  */
-
 (function () {
   "use strict";
 
-  // ── Selectors derived from the provided outer-HTML snippets ────────────────
-  const TARGETS = [
-    // Top navigation / article header bar
-    "div.Header_header_container__uchwV",
+  const opts = window.__ES_CLEAN_OPTS || {};
+  const isScaler = location.hostname.includes("scaler.com");
 
-    // Right-column sidebar (ads, related links, etc.)
-    "div.view_right_section__M6YCz",
+  // ── Scaler-specific selectors mapped to preset names ──────────────────────
+  const SCALER_MAP = {
+    "Header":          "div.Header_header_container__uchwV",
+    "Sidebar":         "div.view_right_section__M6YCz",
+    "Author widget":   "div:has(> .articleWidget_articleWidget__heading___Kzbi)",
+    "Author byline":   "div.article-author_tooltipContainer__LSaMQ",
+    "Article meta":    "div.article-author_article_time_detail__SHs2n",
+    "Quiz":            "div:has(> .quiz_quiz_container__UxcM5)",
+    "Placement card":  "div.styles_container__Xpr6p",
+    "Challenge":       "div.quiz_quiz_container_wrapper__HPjaU",
+    "Content footer":  "div.contentFooter_footer__tOsSU",
+    "Explore list":    "div.styles_explore_list__QDwsT",
+    "Nav arrows":      "div.view_navStep__TE_SH",
+    "Engagement bar":  "div.engagement-panel-desktop_engagement_bar__y0urM",
+    "Video banner":    "div:has(> .articleWidget_banner_heading___leIS)",
+    "Row spacer":      "div.row.space-between.m-b-xxs",
+    "Callback strip":  "div.rcb_widget",
+    "Site footer":     "footer"
+  };
 
-    // Author widget (first variant) — outer <div> identified by its direct child
-    "div:has(> .articleWidget_articleWidget__heading___Kzbi)",
+  // ── Build the active selector list ────────────────────────────────────────
+  const selectors = [];
 
-    // Author tooltip / byline (second variant — "By Ayush Kumar" strip)
-    "div.article-author_tooltipContainer__LSaMQ",
+  if (isScaler) {
+    const presets = opts.scalerPresets || {};
+    // If no presets provided, enable everything by default
+    const hasPresets = Object.keys(presets).length > 0;
+    for (const [name, sel] of Object.entries(SCALER_MAP)) {
+      if (!hasPresets || presets[name] !== false) selectors.push(sel);
+    }
+  } else {
+    // Non-Scaler: optional universal header/footer
+    if (opts.removeHeader) selectors.push("header");
+    if (opts.removeFooter) selectors.push("footer");
+  }
 
-    // Article metadata row (read time, last updated, view count)
-    "div.article-author_article_time_detail__SHs2n",
+  // Custom selectors (per-site, from options)
+  if (Array.isArray(opts.customSelectors)) {
+    opts.customSelectors.forEach((s) => { if (s.trim()) selectors.push(s.trim()); });
+  }
 
-    // Inline quiz block — outer <div> identified by its direct child
-    "div:has(> .quiz_quiz_container__UxcM5)",
-
-    // Placement / statistics card
-    "div.styles_container__Xpr6p",
-
-    // End-of-article challenge block
-    "div.quiz_quiz_container_wrapper__HPjaU",
-
-    // Article content footer (rating widget, tags, collaborators)
-    "div.contentFooter_footer__tOsSU",
-
-    // "Explore" link list below the article
-    "div.styles_explore_list__QDwsT",
-
-    // Prev / Next navigation bar between articles
-    "div.view_navStep__TE_SH",
-
-    // Left-side engagement panel (scroll progress, reactions, share)
-    "div.engagement-panel-desktop_engagement_bar__y0urM",
-
-    // Embedded video course banner — outer <div> identified by its direct child
-    "div:has(> .articleWidget_banner_heading___leIS)",
-
-    // Empty row spacer div
-    "div.row.space-between.m-b-xxs",
-
-    // Callback / career-counselling floating strip
-    "div.rcb_widget",
-
-    // Site-wide footer
-    "footer",
-  ];
-
+  // ── Sweep ─────────────────────────────────────────────────────────────────
   let total = 0;
-
   function sweep() {
-    TARGETS.forEach((selector) => {
+    selectors.forEach((sel) => {
       try {
-        document.querySelectorAll(selector).forEach((el) => {
-          el.remove();
-          total++;
-        });
-      } catch (err) {
-        // A bad selector (e.g. :has() unsupported in very old builds) should
-        // not abort the whole sweep.
-        console.warn("[Page Cleaner] Skipping selector:", selector, err);
+        document.querySelectorAll(sel).forEach((el) => { el.remove(); total++; });
+      } catch (e) {
+        console.warn("[exportSculpt] Bad selector:", sel, e);
       }
     });
   }
 
-  // First pass — catches everything already in the DOM
   sweep();
 
-  // Second pass — catches elements injected by JS after the first pass
-  const observer = new MutationObserver(sweep);
-  observer.observe(document.documentElement, { childList: true, subtree: true });
+  const obs = new MutationObserver(sweep);
+  obs.observe(document.documentElement, { childList: true, subtree: true });
+  setTimeout(() => obs.disconnect(), 15000);
 
-  // Stop watching after 15 s; the page is almost certainly done loading by then
-  setTimeout(() => observer.disconnect(), 15000);
-
-  // Stamp the page so the popup knows it is already clean on next open
-  window.__PC_CLEANED = true;
-
-  // Return the count so popup.js can display it
+  window.__ES_CLEANED = true;
   return total;
 })();
