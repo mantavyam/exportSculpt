@@ -12,7 +12,7 @@ async function loadSettings() {
   const d = {
     theme:"light", autoClean:false, scrollBehavior:true, historyEnabled:false,
     filenameTemplate:"{title} - {date}", headerFooterStamp:true,
-    pdfDefaults:{ pageSize:"A4", orientation:"portrait", marginCm:0.5 },
+    pdfDefaults:{ pageSize:"A4", orientation:"landscapes", marginCm:0.5 },
     scalerPresets:{}, customSelectors:{}
   };
   const s = await chrome.storage.local.get(Object.keys(d));

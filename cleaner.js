@@ -32,7 +32,13 @@
     "Row spacer":      "div.row.space-between.m-b-xxs",
     "Callback strip":  "div.rcb_widget",
     "Exit popup":      "div.exit-intent_modal_container__O2C8_",
-    "Site footer":     "footer"
+    "Site footer":     "footer",
+    "Program cards":   "div.styles_container__84ksO",
+    "Masterclasses":   "div.styles_multiContainer__TTorv",
+    "Alumni Stories":  "div.styles_container__eZaZN",
+    "Hiring partners": "div.styles_container__6od1X",
+    "Career growth":   "div.styles_wrapper__RLhAi",
+    "Program Sub":     "div.horizontal-scroll-view.horizontal-scroll_container__jCbjd"
   };
 
   // ── Build the active selector list ────────────────────────────────────────
